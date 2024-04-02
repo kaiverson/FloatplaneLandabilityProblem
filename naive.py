@@ -95,7 +95,7 @@ def edge_distances_of_polygon(vertices):
     return edge_distances
 
 
-def has_length_within_polygon_naive(vertices, target_miles):
+def has_length_within_polygon_naive(vertices, target_miles, visualize=False):
     """
     Determines which polygons have a straight line distance of at least target_miles contained within them.
     Assumes that polygon vertices represent lattitudes and longitudes. Distances based on haversine formula.
@@ -110,7 +110,7 @@ def has_length_within_polygon_naive(vertices, target_miles):
     edge_lengths = edge_distances_of_polygon(vertices)
     longest_edge_length = edge_lengths.max()
     min_index_offset = target_miles // longest_edge_length
-    print("min_index_offset:", min_index_offset)
+    if visualize: print("min_index_offset:", int(min_index_offset))
     if min_index_offset == 0:
         return 'Passes*         *May have only passed due to low resolution'
     
@@ -119,13 +119,14 @@ def has_length_within_polygon_naive(vertices, target_miles):
     for i in range(num_vertices):
         for j in range(num_vertices):
             if i + min_index_offset >= j:
-                print(" ~", end='')
+                if visualize: print(" ~", end='')
                 continue
             distance = distance_between_points_on_earth(vertices, i, j)
             passes = True if distance >= target_miles else False
-            print(f" {1 if passes else 0}", end='')
+            if visualize: print(f" {1 if passes else 0}", end='')
             solution = "Passes" if passes == True else solution
-        print()
+            if passes and not visualize: return solution 
+        if visualize: print()
 
 
     return solution
@@ -133,7 +134,7 @@ def has_length_within_polygon_naive(vertices, target_miles):
 
 
 
-def main_function(target_miles=0.5, polygons_path='polygons.csv', results_path='results.csv'):
+def main_function(target_miles=0.5, polygons_path='polygons.csv', results_path='results.csv', visualize=False):
     """
     Determines which polygons have a straight line distance of at least target_miles contained within them.
     Assumes that polygon vertices represent lattitudes and longitudes. Distances based on haversine formula.
@@ -157,11 +158,11 @@ def main_function(target_miles=0.5, polygons_path='polygons.csv', results_path='
     print()
 
     for polygon, vertices in polygons.items():
-        solution_for_polygon = has_length_within_polygon_naive(vertices, target_miles)
+        solution_for_polygon = has_length_within_polygon_naive(vertices, target_miles, visualize)
         print(f"Polygon {int(polygon)}:", solution_for_polygon)
 
 
 if __name__ == "__main__":
-    main_function(target_miles=18.2)
+    main_function(target_miles=18.2, visualize=True)
 
 
