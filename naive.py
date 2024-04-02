@@ -27,11 +27,12 @@ def read_polygons_from_csv(polygons_path):
         if row['Polygon'] not in polygons.keys():
             polygons[row['Polygon']] = []
         polygons[row['Polygon']].append([row['Latitude'], row['Longitude']])
-    
+
     for key in polygons.keys():
         polygons[key] = np.array(polygons[key])
-    
+
     return polygons
+
 
 def haversine(lat1, lon1, lat2, lon2):
     """
@@ -48,9 +49,9 @@ def haversine(lat1, lon1, lat2, lon2):
 
     dlon = lon2 - lon1
     dlat = lat2 - lat1
-    a = np.sin(dlat/2.0)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon/2.0)**2
+    a = np.sin(dlat / 2.0) ** 2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2.0) ** 2
     c = 2 * np.arcsin(np.sqrt(a))
-    radius_of_earth_miles = 3958.8    
+    radius_of_earth_miles = 3958.8
     distance = radius_of_earth_miles * c
     return distance
 
@@ -87,11 +88,11 @@ def edge_distances_of_polygon(vertices):
     edge_distances = np.zeros(num_vertices)
 
     for n in range(num_vertices - 1):
-        edge_distances[n] = distance_between_points_on_earth(vertices, n, n+1)
+        edge_distances[n] = distance_between_points_on_earth(vertices, n, n + 1)
 
-    last_edge = distance_between_points_on_earth(vertices, num_vertices-1, 0)
+    last_edge = distance_between_points_on_earth(vertices, num_vertices - 1, 0)
 
-    edge_distances[num_vertices-1] = last_edge
+    edge_distances[num_vertices - 1] = last_edge
     return edge_distances
 
 
@@ -110,28 +111,29 @@ def has_length_within_polygon_naive(vertices, target_miles, visualize=False):
     edge_lengths = edge_distances_of_polygon(vertices)
     longest_edge_length = edge_lengths.max()
     min_index_offset = target_miles // longest_edge_length
-    if visualize: print("min_index_offset:", int(min_index_offset))
+    if visualize:
+        print("min_index_offset:", int(min_index_offset))
     if min_index_offset == 0:
         return 'Passes*         *May have only passed due to low resolution'
-    
+
     solution = "Fails"
     num_vertices = vertices.shape[0]
     for i in range(num_vertices):
         for j in range(num_vertices):
             if i + min_index_offset >= j:
-                if visualize: print(" ~", end='')
+                if visualize:
+                    print(" ~", end='')
                 continue
             distance = distance_between_points_on_earth(vertices, i, j)
             passes = True if distance >= target_miles else False
             if visualize: print(f" {1 if passes else 0}", end='')
-            solution = "Passes" if passes == True else solution
-            if passes and not visualize: return solution 
-        if visualize: print()
-
+            solution = "Passes" if passes is True else solution
+            if passes and not visualize:
+                return solution
+        if visualize:
+            print()
 
     return solution
-
-
 
 
 def main_function(target_miles=0.5, polygons_path='polygons.csv', results_path='results.csv', visualize=False):
@@ -149,11 +151,11 @@ def main_function(target_miles=0.5, polygons_path='polygons.csv', results_path='
     if not os.path.exists(abs_polygons_path):
         print(f"CSV file '{polygons_path}' not found.")
         return
-    
+
     polygons = read_polygons_from_csv(polygons_path)
     polygon_amount = len(polygons.keys())
     print()
-    print(f"{polygon_amount} polygon{'' if polygon_amount==1 else 's'} loaded from {polygons_path}.")
+    print(f"{polygon_amount} polygon{'' if polygon_amount == 1 else 's'} loaded from {polygons_path}.")
     print(f"Searching polygon vertices for straight line distance greater than {target_miles} miles...")
     print()
 
@@ -164,5 +166,3 @@ def main_function(target_miles=0.5, polygons_path='polygons.csv', results_path='
 
 if __name__ == "__main__":
     main_function(target_miles=18.2, visualize=True)
-
-
