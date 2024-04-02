@@ -90,7 +90,7 @@ def edge_distances_of_polygon(vertices):
         edge_distances[n] = distance_between_points_on_earth(vertices, n, n+1)
 
     last_edge = distance_between_points_on_earth(vertices, num_vertices-1, 0)
-    print
+
     edge_distances[num_vertices-1] = last_edge
     return edge_distances
 
