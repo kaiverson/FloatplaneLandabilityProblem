@@ -89,12 +89,13 @@ def preprocess_polygons(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(data)
 
 
-def read_polygons_from_csv(polygons_path):
+def read_polygons_from_csv(polygons_path, max_polygons=None):
     """
     Read polygons from a CSV file.
 
     Parameters: 
         polygons_path (str): File path to the CSV file containing polygon data.
+        max_polygons (int): The maximum number of polygons to load.
 
     Returns: 
         numpy.ndarray: Array of polygons, where each polygon is represented as an array of ordered pairs.
@@ -102,10 +103,16 @@ def read_polygons_from_csv(polygons_path):
     polygons = {}
     df = preprocess_polygons(pd.read_csv(polygons_path))
     df.reset_index()
+    polygon_amount = 0
 
     for index, row in df.iterrows():
         if row['Polygon'] not in polygons.keys():
+            polygon_amount += 1
+            if max_polygons and polygon_amount > max_polygons:
+                break
+
             polygons[row['Polygon']] = []
+
         polygons[row['Polygon']].append([row['Latitude'], row['Longitude']])
 
     for key in polygons.keys():
@@ -176,6 +183,37 @@ def edge_distances_of_polygon(vertices):
     return edge_distances
 
 
+def compute_vertice_average(vertices):
+    """
+    Calculates the average of all of the vertices. 
+    
+    Args:
+        vertices (numpy.ndarray): Array of ordered pairs representing the vertices of the polygon, where each pair is (latitude, longitude).
+
+    Returns:
+        tuple: A tuple containing the average latitude and average longitude.        
+    """
+    latitudes = vertices[:, 0]
+    longitudes = vertices[:, 1]
+
+    avg_latitude = np.mean(latitudes)
+    avg_longitude = np.mean(longitudes)
+
+    return avg_latitude, avg_longitude
+
+
+def perimeter_length(vertices):
+    """
+    Calculates the perimeter length of a polygon.
+
+    Args:
+        vertices (numpy.ndarray): Array of ordered pairs representing the vertices of the polygon, where each pair is (latitude, longitude).
+    """
+    edge_lengths = edge_distances_of_polygon(vertices)
+    perimeter = np.sum(edge_lengths)
+    return perimeter
+
+
 def has_length_within_polygon_naive(vertices, target_miles, visualize=False):
     """
     Determines which polygons have a straight line distance of at least target_miles contained within them.
@@ -183,7 +221,7 @@ def has_length_within_polygon_naive(vertices, target_miles, visualize=False):
     THIS IS A NAIVE SOLUTION. It ISN'T accurate for concave polygons. For example: the case of a thin 'S' shaped polygon.
 
     Parameters:
-        vertices (numpy.ndarray): 
+        vertices (numpy.ndarray): Array of ordered pairs representing the vertices of the polygon, where each pair is (latitude, longitude).
         target_miles (float): the distance that we are checking for within the polygon
     """
     # If vertices are too close together in the vertices list,
@@ -194,7 +232,7 @@ def has_length_within_polygon_naive(vertices, target_miles, visualize=False):
     if visualize:
         print("min_index_offset:", int(min_index_offset))
     if min_index_offset == 0:
-        return 'Passes*         *May have only passed due to low resolution'
+        return 'Passes*'
 
     solution = "Fails"
     num_vertices = vertices.shape[0]
@@ -217,7 +255,7 @@ def has_length_within_polygon_naive(vertices, target_miles, visualize=False):
 
 
 def main_function(target_miles=0.5, polygons_path='polygons_unprocessed.csv', results_path='results.csv',
-                  visualize=False):
+                  visualize=False, max_polygons=None, print_results=True):
     """
     Determines which polygons have a straight line distance of at least target_miles contained within them.
     Assumes that polygon vertices represent lattitudes and longitudes. Distances based on haversine formula.
@@ -227,23 +265,44 @@ def main_function(target_miles=0.5, polygons_path='polygons_unprocessed.csv', re
         target_miles (float): the distance that we are checking for within the polygon
         polygons_path (str): file path to file containing csv polygons. 
         results_path (str): file path to file containing the results.
+        visualize (bool): If True, the algorithm will be visualized.
+        max_polygons (int): The maximum number of polygons to load.
+        print_results (bool): If True, print the results; otherwise, only write them to the results file.
     """
     abs_polygons_path = os.path.abspath(polygons_path)
     if not os.path.exists(abs_polygons_path):
         print(f"CSV file '{polygons_path}' not found.")
         return
 
-    polygons = read_polygons_from_csv(polygons_path)
-    polygon_amount = len(polygons.keys())
-    print()
-    print(f"{polygon_amount} polygon{'' if polygon_amount == 1 else 's'} loaded from {polygons_path}.")
-    print(f"Searching polygon vertices for straight line distance greater than {target_miles} miles...")
-    print()
+    polygons = read_polygons_from_csv(polygons_path, max_polygons)
+    polygon_results = []
 
     for polygon, vertices in polygons.items():
-        solution_for_polygon = has_length_within_polygon_naive(vertices, target_miles, visualize)
-        print(f"Polygon {int(polygon)}:", solution_for_polygon)
+        solution = has_length_within_polygon_naive(vertices, target_miles, visualize)
+        location = compute_vertice_average(vertices)
+        perimeter = perimeter_length(vertices)
+        polygon_results.append((int(polygon), location[0], location[1], solution, perimeter))
+
+    if print_results:
+        total = [0, 0]
+        for polygon, location_lat, location_lon, solution, perimeter in polygon_results:
+            print(f"Polygon {polygon:>6}: {solution:<10} Latitude: {location_lat:>10}, Longitude: {location_lon:>10}, Perimeter: {perimeter:>10}")
+            if solution == 'Fails':
+                total[0] += 1
+            else:
+                total[1] += 1
+
+        percent_passed = (100 * total[1]) / (total[1] + total[0])
+        print()
+        print(f"Results:")
+        print(f"{total[1]:>10} polygons passed.")
+        print(f"{total[0]:>10} polygons failed.")
+        print(f"{percent_passed:.1f}% of the polygons passed.")
+
+    # Write results to CSV file using Pandas
+    df = pd.DataFrame(polygon_results, columns=['Polygon', 'Latitude', 'Longitude', 'Result', 'Perimeter'])
+    df.to_csv(results_path, index=False)
 
 
 if __name__ == "__main__":
-    main_function(target_miles=0.310686, visualize=False)
+    main_function(target_miles=0.310686, visualize=False, max_polygons=40)
