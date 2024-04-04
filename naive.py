@@ -183,6 +183,20 @@ def edge_distances_of_polygon(vertices):
     return edge_distances
 
 
+def edge_length_standard_deviation(vertices):
+    """
+    Calculate the standard deviation of the edge lengths of a polygon.
+
+    Parameters:
+        vertices (numpy.ndarray): Array of ordered pairs representing the vertices of the polygon, where each pair is (latitude, longitude).
+
+    Returns:
+        float: Standard deviation of the edge lengths.
+    """
+    edge_lengths = edge_distances_of_polygon(vertices)
+    return np.std(edge_lengths)
+
+
 def compute_vertice_average(vertices):
     """
     Calculates the average of all of the vertices. 
@@ -255,7 +269,7 @@ def has_length_within_polygon_naive(vertices, target_miles, visualize=False):
 
 
 def main_function(target_miles=0.5, polygons_path='polygons_unprocessed.csv', results_path='results.csv',
-                  visualize=False, max_polygons=None, print_results=True):
+                  visualize=False, max_polygons=None, print_info=True):
     """
     Determines which polygons have a straight line distance of at least target_miles contained within them.
     Assumes that polygon vertices represent lattitudes and longitudes. Distances based on haversine formula.
@@ -267,7 +281,7 @@ def main_function(target_miles=0.5, polygons_path='polygons_unprocessed.csv', re
         results_path (str): file path to file containing the results.
         visualize (bool): If True, the algorithm will be visualized.
         max_polygons (int): The maximum number of polygons to load.
-        print_results (bool): If True, print the results; otherwise, only write them to the results file.
+        print_info (bool): If True, print the information on each of the polygons; otherwise, only write them to the results file.
     """
     abs_polygons_path = os.path.abspath(polygons_path)
     if not os.path.exists(abs_polygons_path):
@@ -277,27 +291,33 @@ def main_function(target_miles=0.5, polygons_path='polygons_unprocessed.csv', re
     polygons = read_polygons_from_csv(polygons_path, max_polygons)
     polygon_results = []
 
+    passed = 0
+    failed = 0
+
     for polygon, vertices in polygons.items():
         solution = has_length_within_polygon_naive(vertices, target_miles, visualize)
         location = compute_vertice_average(vertices)
         perimeter = perimeter_length(vertices)
+        vertices_amount = len(vertices)
         polygon_results.append((int(polygon), location[0], location[1], solution, perimeter))
+        edge_std = edge_length_standard_deviation(vertices)
+        if print_info:
+            print(f"Polygon {polygon:>6}: {solution:<10} Lat,Lon: ({location[0]}, {location[1]}), # vertices: {vertices_amount}, Edge std: {edge_std}, Perimeter: {perimeter:>10}")
+        if solution == 'Fails':
+            failed += 1
+        else:
+            passed += 1
 
-    if print_results:
-        total = [0, 0]
-        for polygon, location_lat, location_lon, solution, perimeter in polygon_results:
-            print(f"Polygon {polygon:>6}: {solution:<10} Latitude: {location_lat:>10}, Longitude: {location_lon:>10}, Perimeter: {perimeter:>10}")
-            if solution == 'Fails':
-                total[0] += 1
-            else:
-                total[1] += 1
 
-        percent_passed = (100 * total[1]) / (total[1] + total[0])
-        print()
-        print(f"Results:")
-        print(f"{total[1]:>10} polygons passed.")
-        print(f"{total[0]:>10} polygons failed.")
-        print(f"{percent_passed:.1f}% of the polygons passed.")
+
+    total = passed + failed
+    percent_passed = (100 * passed) / total
+    print()
+    print(f"Results:")
+    print(f"{total} total polygons.")
+    print(f"{passed:>10} polygons passed.")
+    print(f"{failed:>10} polygons failed.")
+    print(f"{percent_passed:.1f}% of the polygons passed.")
 
     # Write results to CSV file using Pandas
     df = pd.DataFrame(polygon_results, columns=['Polygon', 'Latitude', 'Longitude', 'Result', 'Perimeter'])
