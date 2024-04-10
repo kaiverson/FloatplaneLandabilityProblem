@@ -1,6 +1,6 @@
 import numpy as np
 
-from distance import *
+from functions.distance import *
 
 
 def edge_lengths_of_polygon(vertices):
