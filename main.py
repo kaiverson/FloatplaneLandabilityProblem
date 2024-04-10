@@ -49,7 +49,7 @@ def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv',
         edge_lengths = edge_lengths_of_polygon(vertices)
         edge_mean = np.mean(edge_lengths)
         edge_std = np.std(edge_lengths)
-        perimeter = perimeter_length(edge_lengths)
+        perimeter = np.sum(edge_lengths)
 
         vertices_amount = len(vertices)
         polygon_results.append((int(polygon), location[0], location[1], solution, perimeter))

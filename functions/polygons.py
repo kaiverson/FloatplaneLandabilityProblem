@@ -69,6 +69,29 @@ def average_vertice_location(vertices):
     return avg_latitude, avg_longitude
 
 
+def check_diagonal(vertices, i, j, target_meters, visualize=False):
+    """
+    Determines if a diagonal is longer than the target distance.
+
+    Parameters:
+        vertices (numpy.ndarray): Array of ordered pairs representing the vertices fo the polygon.
+        i (int): index of the first vertice defining the diagonal.
+        j (int): index of the second vertice defining the diagonal.
+        target_meters (float): the target distance in meters.
+        visualize (bool): determines if the algorithm should be visualized.
+
+    Returns:
+        bool: True if diagonal passes, False if diagonal doesn't pass.
+    """
+    distance = distance_between_vertices(vertices, i, j, haversine)
+    passes = True if distance >= target_meters else False
+
+    if visualize: 
+        print(f" {1 if passes else 0}", end='')
+
+    return passes
+
+
 def has_length_within_polygon_naive(vertices, target_meters, visualize=False):
     """
     Determines which polygons have a straight line distance of at least target_meters contained within them.
@@ -101,10 +124,10 @@ def has_length_within_polygon_naive(vertices, target_meters, visualize=False):
                 if visualize:
                     print(" ~", end='')
                 continue
-            distance = distance_between_vertices(vertices, i, j)
-            passes = True if distance >= target_meters else False
-            if visualize: print(f" {1 if passes else 0}", end='')
+
+            passes = check_diagonal(vertices, i, j, target_meters, visualize)
             solution = "Passes" if passes is True else solution
+            
             if passes and not visualize:
                 return solution
         if visualize:
