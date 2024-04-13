@@ -12,6 +12,7 @@ mean_lon = df['Longitude'].mean()
 map = folium.Map(location=[mean_lat, mean_lon], zoom_start=3)
 
 unique_polygon_numbers = df['Polygon'].unique()
+unique_polygon_numbers = unique_polygon_numbers[0:100]
 
 for poly_id in unique_polygon_numbers:
     poly = df[df['Polygon'] == poly_id]
