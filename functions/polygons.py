@@ -3,13 +3,14 @@ import numpy as np
 from functions.distance import *
 
 
-def edge_lengths_of_polygon(vertices):
+def edge_lengths_of_polygon(vertices, lat_lon_to_meters):
     """
     Calculate the length of the each of the edges of a polygon.
 
     Parameters:
         vertices (numpy.ndarray): Array of ordered pairs representing the vertices of the polygon, where each pair is (latitude, longitude).
-
+        lat_lon_to_meters ([float, float]): Conversion rate from lat to meters and from lon to meters.
+        
     Returns:
         (numpy.ndarray): length of each edge. Edge n corresponds to vertices n and n+1.
     """
@@ -17,9 +18,9 @@ def edge_lengths_of_polygon(vertices):
     edge_distances = np.zeros(num_vertices)
 
     for n in range(num_vertices - 1):
-        edge_distances[n] = distance_between_vertices(vertices, n, n + 1)
+        edge_distances[n] = distance_between_vertices(vertices, n, n + 1, lat_lon_to_meters)
 
-    last_edge = distance_between_vertices(vertices, num_vertices - 1, 0)
+    last_edge = distance_between_vertices(vertices, num_vertices - 1, 0, lat_lon_to_meters)
 
     edge_distances[num_vertices - 1] = last_edge
     return edge_distances
@@ -69,7 +70,7 @@ def average_vertice_location(vertices):
     return avg_latitude, avg_longitude
 
 
-def check_diagonal(vertices, i, j, target_meters, visualize=False):
+def check_diagonal(vertices, i, j, target_meters, lat_lon_to_meters, visualize=False):
     """
     Determines if a diagonal is longer than the target distance.
 
@@ -78,12 +79,13 @@ def check_diagonal(vertices, i, j, target_meters, visualize=False):
         i (int): index of the first vertice defining the diagonal.
         j (int): index of the second vertice defining the diagonal.
         target_meters (float): the target distance in meters.
+        lat_lon_to_meters ([float, float]): Conversion rate from lat to meters and from lon to meters.
         visualize (bool): determines if the algorithm should be visualized.
 
     Returns:
         bool: True if diagonal passes, False if diagonal doesn't pass.
     """
-    distance = distance_between_vertices(vertices, i, j, haversine)
+    distance = distance_between_vertices(vertices, i, j, lat_lon_to_meters)
     passes = True if distance >= target_meters else False
 
     if visualize: 
@@ -102,22 +104,28 @@ def has_length_within_polygon_naive(vertices, target_meters, visualize=False):
         vertices (numpy.ndarray): Array of ordered pairs representing the vertices of the polygon, where each pair is (latitude, longitude).
         target_meters (float): the distance that we are checking for within the polygon
     """
-    # TODO: if min_index_offset > num_vertices / 2, polygon should fail.
+    # TODO: if min_index_offset > num_vertices / 2, polygon should fail. (Think about what this case implies)
     # TODO: if diagonal passes length check, only then perform concave check.
     # TODO: The min_index offset thing needs to treat vertices as a closed loop and not a list.
     # TODO: Make this function readable.
     # TODO: Add edges_checked counter which divided by num_vertices^2 gives a sense of optimization.
     # TODO: Maybe add counter for how many concave checks were made.
-    edge_lengths = edge_lengths_of_polygon(vertices)
+    
+    conversion = lat_lon_to_meters(vertices[0])
+
+    edge_lengths = edge_lengths_of_polygon(vertices, conversion)
     longest_edge_length = edge_lengths.max()
     min_index_offset = target_meters // longest_edge_length
+    
     if visualize:
         print("min_index_offset:", int(min_index_offset))
+    
     if min_index_offset == 0:
         return 'Passes*'
 
     solution = "Fails"
     num_vertices = vertices.shape[0]
+
     for i in range(num_vertices):
         for j in range(num_vertices):
             if i >= j - min_index_offset:
@@ -125,7 +133,7 @@ def has_length_within_polygon_naive(vertices, target_meters, visualize=False):
                     print(" ~", end='')
                 continue
 
-            passes = check_diagonal(vertices, i, j, target_meters, visualize)
+            passes = check_diagonal(vertices, i, j, target_meters, conversion, visualize)
             solution = "Passes" if passes is True else solution
             
             if passes and not visualize:

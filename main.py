@@ -7,11 +7,26 @@
 import pandas as pd
 import numpy as np
 import os
+from time import time
 
 from functions.files import *
 from functions.polygons import *
 
+from time import time 
+  
+  
+def stop_watch(func): 
+    # This tells you how long it took for a function to execute.
+    def wrap_func(*args, **kwargs): 
+        t1 = time() 
+        result = func(*args, **kwargs) 
+        t2 = time() 
+        print(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s') 
+        return result 
+    return wrap_func  
 
+
+@stop_watch
 def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv', results_path='results.csv',
                   visualize=False, max_polygons=None, print_info=True):
     """
@@ -46,7 +61,7 @@ def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv',
         solution = has_length_within_polygon_naive(vertices, target_meters, visualize)
         location = average_vertice_location(vertices)
 
-        edge_lengths = edge_lengths_of_polygon(vertices)
+        edge_lengths = edge_lengths_of_polygon(vertices, lat_lon_to_meters(vertices[0]))
         edge_mean = np.mean(edge_lengths)
         edge_std = np.std(edge_lengths)
         perimeter = np.sum(edge_lengths)
@@ -78,4 +93,4 @@ def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv',
 
 
 if __name__ == "__main__":
-    main_function(target_meters=500.0, results_path='sucssesful_polygons.csv', visualize=False)
+    main_function(target_meters=500.0, results_path='sucssesful_polygons.csv', visualize=False, max_polygons=None)
