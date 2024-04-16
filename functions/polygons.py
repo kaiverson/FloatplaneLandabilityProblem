@@ -93,6 +93,52 @@ def check_diagonal(vertices, i, j, target_meters, lat_lon_to_meters, visualize=F
 
     return passes
 
+def is_point_in_polygon(vertices: [tuple], point_coordinates: tuple) -> bool:
+    """
+    use the raycasting algorithm to check to see if the point is inside the polygon.
+
+    this is a modified version of the explanation from:
+    http://www.philliplemons.com/posts/ray-casting-algorithm
+
+
+    Args:
+        vertices: a list of tuples containing the (x,y) coords of each point of the polygon
+        point_coordinates: the point we want to check as a tuple
+
+    Returns: true or false depending on whether the polygon contains the point
+
+    """
+
+    # TODO: consider if adding epsilons is necessary for our purposes
+
+    # unpack the point coordinate tuple
+    x, y = point_coordinates
+
+    # initialize some stuff
+    n = len(vertices)
+    inside = False  # start from the standpoint that you're not "inside"
+    point_1_x, point_1_y = vertices[0]  # get the first edge from the vertices
+
+    for i in range(n + 1):
+        # get the second edge, this counts up 0 - n, then at n + 1 goes back to the first point
+        point_2_x, point_2_y = vertices[i % n]
+
+        # check to see if the point is bounded between the y values - that's a requirement for the ray to intersect
+        if min(point_1_y, point_2_y) < y <= max(point_1_y, point_2_y):
+            # now check to make sure the point is less than the max x-value
+            if x<= max(point_1_x, point_2_x):
+                if point_1_y != point_2_y:
+                    intercept = (y - point_1_y) * (point_2_x - point_1_x) / (point_2_y - point_1_y) + point_1_x
+
+                    if point_1_x == point_2_x or x <= intercept:
+                        inside = not inside
+
+        point_1_x, point_1_y = point_2_x, point_2_y
+
+    return inside
+
+
+
 
 def has_length_within_polygon_naive(vertices, target_meters, visualize=False):
     """
