@@ -1,11 +1,12 @@
+import os
+
 import folium
 import pandas as pd
 
 from functions.files import preprocess_polygons
 from functions.files import read_polygons_from_csv
 
-df = pd.read_csv("../lakes_csv/lake_boundaries_1.csv")
-df = preprocess_polygons(df)
+df = pd.read_csv("../sucssesful_polygons_vertices.csv")
 
 mean_lat = df['Latitude'].mean()
 mean_lon = df['Longitude'].mean()
@@ -19,6 +20,7 @@ for poly_id in unique_polygon_numbers:
 
     lats = poly['Latitude'].to_list()
     lons = poly['Longitude'].to_list()
+
 
     fg = folium.FeatureGroup(name=f'Poly {poly_id}')
     folium.PolyLine([[lat, lon] for lat, lon in zip(lats, lons)], color="red", weight=2.5, opacity=1).add_to(fg)

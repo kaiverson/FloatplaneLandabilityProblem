@@ -112,3 +112,21 @@ def read_polygons_from_csv(polygons_path, max_polygons=None):
         polygons[key] = np.array(polygons[key])
 
     return polygons
+
+def export_polygons_from_raw_vertices(filename: str,
+                                      polygons: list[list]) -> None:
+    data = {"Polygon": [],
+            "Latitude": [],
+            "Longitude": []}
+
+    for polygon_number, polygon in enumerate(polygons):
+        for latitude, longitude in polygon:
+            data["Polygon"].append(polygon_number)
+            data["Latitude"].append(latitude)
+            data["Longitude"].append(longitude)
+
+    df = pd.DataFrame(data, columns=['Polygon', 'Latitude', 'Longitude'])
+    df.to_csv(filename, index=False)
+
+
+    return None
