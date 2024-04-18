@@ -93,6 +93,7 @@ def check_diagonal(vertices, i, j, target_meters, lat_lon_to_meters, visualize=F
 
     return passes
 
+
 def is_point_in_polygon(vertices: [tuple], point_coordinates: tuple) -> bool:
     """
     use the raycasting algorithm to check to see if the point is inside the polygon.

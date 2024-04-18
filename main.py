@@ -28,7 +28,7 @@ def stop_watch(func):
 
 @stop_watch
 def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv', results_path='results.csv',
-                  visualize=False, max_polygons=None, print_info=True):
+                  visualize=False, max_polygons=None, print_info=True, export_successful=False):
     """
     Determines which polygons have a straight line distance of at least target_miles contained within them.
     Assumes that polygon vertices represent lattitudes and longitudes. Distances based on haversine formula.
@@ -52,7 +52,7 @@ def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv',
 
     polygons = read_polygons_from_csv(polygons_path, max_polygons)
     polygon_results = []
-
+    passing_polygons = []
 
     passed = 0
     failed = 0
@@ -74,6 +74,7 @@ def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv',
             failed += 1
         else:
             #print(np.array2string(vertices, separator=', '))
+            passing_polygons.append(vertices)
             passed += 1
 
 
@@ -91,6 +92,17 @@ def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv',
     df = pd.DataFrame(polygon_results, columns=['Polygon', 'Latitude', 'Longitude', 'Result', 'Perimeter'])
     df.to_csv(results_path, index=False)
 
+    if export_successful:
+        vertices_file_name = f"{os.path.splitext(results_path)[0]}_vertices.csv"
+        export_polygons_from_raw_vertices(filename=vertices_file_name, polygons=passing_polygons)
+
 
 if __name__ == "__main__":
-    main_function(target_meters=500.0, results_path='sucssesful_polygons.csv', visualize=False, max_polygons=None)
+
+    # TODO:  Loop through all the boundaries and create a bunch of .csvs with "good polygons."
+
+    main_function(target_meters=500.0,
+                  results_path='sucssesful_polygons.csv',
+                  visualize=False,
+                  max_polygons=None,
+                  export_successful=True)
