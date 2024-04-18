@@ -99,6 +99,8 @@ def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv',
 
 if __name__ == "__main__":
 
+    # TODO:  Loop through all the boundaries and create a bunch of .csvs with "good polygons."
+
     main_function(target_meters=500.0,
                   results_path='sucssesful_polygons.csv',
                   visualize=False,
