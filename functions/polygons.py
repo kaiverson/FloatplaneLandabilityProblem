@@ -1,5 +1,4 @@
-import numpy as np
-
+import pandas as pd
 from functions.distance import *
 
 
@@ -191,3 +190,9 @@ def has_length_within_polygon_naive(vertices, target_meters, visualize=False):
     
 
     return solution
+
+
+def find_most_common_id_and_remove(df: pd.DataFrame) -> pd.DataFrame:
+    # get the id of the polygon that occurs the most
+    surrounding_poly = df['Polygon'].mode()[0]
+    return df[df['Polygon'] != surrounding_poly]

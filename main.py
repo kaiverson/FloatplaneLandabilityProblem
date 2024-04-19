@@ -4,43 +4,41 @@
 # File created on 4-1-2024
 #####################################################################
 
-import pandas as pd
-import numpy as np
-import os
-from time import time
 
+import os
+import pandas as pd
 from functions.files import *
 from functions.polygons import *
+from functions.visualization import map_lakes
+from functions.statistics import generate_positive_identification_statistics
+from functions.debugging_tools import stop_watch
 
-from time import time 
-  
-  
-def stop_watch(func): 
-    # This tells you how long it took for a function to execute.
-    def wrap_func(*args, **kwargs): 
-        t1 = time() 
-        result = func(*args, **kwargs) 
-        t2 = time() 
-        print(f'Function {func.__name__!r} executed in {(t2-t1):.4f}s') 
-        return result 
-    return wrap_func  
 
 
 @stop_watch
-def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv', results_path='results.csv',
-                  visualize=False, max_polygons=None, print_info=True, export_successful=False):
+def main_function(target_meters=500.0,
+                  polygons_path='polygons_unprocessed.csv',
+                  results_path=None,  # use this to export the results to .csv
+                  visualize=False,  # use this to visualize the algorithm (not working yet)
+                  max_polygons=None,
+                  print_info=False,
+                  export_successful=False) -> pd.DataFrame:
     """
     Determines which polygons have a straight line distance of at least target_miles contained within them.
     Assumes that polygon vertices represent lattitudes and longitudes. Distances based on haversine formula.
     THIS IS A NAIVE SOLUTION. It ISN'T accurate for concave polygons. For example: the case of a thin 'S' shaped polygon.
 
     Parameters:
-        target_miles (float): the distance that we are checking for within the polygon
+        export_successful: flag to tell the algorithm to export the successful vertices
+        target_meters (float): the distance that we are checking for within the polygon
         polygons_path (str): file path to file containing csv polygons. 
         results_path (str): file path to file containing the results.
         visualize (bool): If True, the algorithm will be visualized.
         max_polygons (int): The maximum number of polygons to load.
         print_info (bool): If True, print the information on each of the polygons; otherwise, only write them to the results file.
+
+    return:
+        the successful polygons in a dataframe
     """
     # TODO: make code more readable.
     # TODO: make output more readable.
@@ -69,40 +67,92 @@ def main_function(target_meters=500.0, polygons_path='polygons_unprocessed.csv',
         vertices_amount = len(vertices)
         polygon_results.append((int(polygon), location[0], location[1], solution, perimeter))
         if print_info and solution == "Passes":
-            print(f"Polygon {polygon:>6.0f}: {solution:<10} Lat,Lon: ({location[0]}, {location[1]}), # vertices: {vertices_amount}, Edge mean: {edge_mean:.3f}, Edge std: {edge_std:.3f}, Perimeter: {perimeter:>10}")
+            print(
+                f"Polygon {polygon:>6.0f}: {solution:<10} Lat,Lon: ({location[0]}, {location[1]}), # vertices: {vertices_amount}, Edge mean: {edge_mean:.3f}, Edge std: {edge_std:.3f}, Perimeter: {perimeter:>10}")
         if solution == 'Fails':
             failed += 1
         else:
-            #print(np.array2string(vertices, separator=', '))
+            # print(np.array2string(vertices, separator=', '))
             passing_polygons.append(vertices)
             passed += 1
 
-
-
     total = passed + failed
     percent_passed = (100 * passed) / total
-    print()
-    print(f"Results:")
-    print(f"{total} total polygons.")
-    print(f"{passed} polygons passed.")
-    print(f"{failed} polygons failed.")
-    print(f"{percent_passed:.1f}% of the polygons passed.")
+
+    if print_info:
+        # if you're going to print everything out, do so
+        print()
+        print(f"Results:")
+        print(f"{total} total polygons.")
+        print(f"{passed} polygons passed.")
+        print(f"{failed} polygons failed.")
+        print(f"{percent_passed:.1f}% of the polygons passed.")
 
     # Write results to CSV file using Pandas
     df = pd.DataFrame(polygon_results, columns=['Polygon', 'Latitude', 'Longitude', 'Result', 'Perimeter'])
-    df.to_csv(results_path, index=False)
 
-    if export_successful:
+    if results_path is not None:
+        # if you've turned on results path send that to .csv
+        df.to_csv(results_path, index=False)
+
+    if export_successful and results_path:
+        # if you've turned on export successful and specified a path, export those
         vertices_file_name = f"{os.path.splitext(results_path)[0]}_vertices.csv"
         export_polygons_from_raw_vertices(filename=vertices_file_name, polygons=passing_polygons)
 
+    # convert the raw vertices to a df and return that
+    return find_most_common_id_and_remove(raw_vertices_to_df(passing_polygons))
+
 
 if __name__ == "__main__":
+    """
+    The main function here should be where we fit together all the pieces of our model.  This is called the "pipe and
+    filter architecture"
+    
+    I went ahead and refactored everything so that the model produces a list of dataframes of successful polygons, then
+    concats those together, visualizes them, and checks to see how many points we got right with our algorithm.
+    """
+    # TODO:  Refactor some of this code to be inside abstracted functions
 
-    # TODO:  Loop through all the boundaries and create a bunch of .csvs with "good polygons."
 
-    main_function(target_meters=500.0,
-                  results_path='sucssesful_polygons.csv',
-                  visualize=False,
-                  max_polygons=None,
-                  export_successful=True)
+    csv_list = ['lakes_csv/lake_boundaries_1.csv', 'lakes_csv/lake_boundaries_2.csv', 'lakes_csv/lake_boundaries_3.csv',
+                'lakes_csv/lake_boundaries_4.csv']
+
+    successful_polygons = [main_function(polygons_path=csv_file) for csv_file in csv_list]
+
+    # make all the polygon indices unique by adding the length of the previous df to the polygon
+    index_counter = 1
+    for df in successful_polygons:
+        df['Polygon'] = df['Polygon'] + index_counter
+        index_counter = index_counter + df["Polygon"].max()
+
+    # put all of these together and calculate the min and max lat-lons
+    df = pd.concat(successful_polygons)
+
+    # now load the source of truth,
+    lake_truth = pd.read_csv('flight_data/cleaned.csv')
+    lake_truth = lake_truth[lake_truth['floatplanes'] == 1]  # we don't care about runways
+
+    """
+    now we need to filter out the places that aren't landable bodies of water, I naively do that here by removing 
+    points in the source of truth that are less than or greater than the points detected in our ROI, but there's
+    obviously a better way to do that.
+    """
+    min_lat, max_lat = df['Latitude'].min(), df['Latitude'].max()
+    min_lon, max_lon = df['Longitude'].min(), df['Longitude'].max()
+
+
+    lake_truth = lake_truth[lake_truth['Lat'] > min_lat]
+    lake_truth = lake_truth[lake_truth["Lat"] < max_lat]
+    lake_truth = lake_truth[lake_truth['Long'] > min_lon]
+    lake_truth = lake_truth[lake_truth["Long"] < max_lon]
+
+
+
+    # now we need to check each point in the source of truth data and see if it's bounded by one of the polygons
+    lake_truth = generate_positive_identification_statistics(df, lake_truth, verbose=True)
+    print(lake_truth)
+
+    # now send all this to the map_lakes function to generate an html file
+    map_lakes(outline_df=df, marker_df=lake_truth)
+

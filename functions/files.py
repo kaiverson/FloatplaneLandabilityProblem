@@ -22,7 +22,7 @@ def find_polygons(numbers):
     polygons = []
     polygon = []
     for i in range(0, len(numbers), 2):
-        x, y = numbers[i], numbers[i+1]
+        x, y = numbers[i], numbers[i + 1]
         if not polygon or [x, y] != polygon[0]:
             # if you don't have anything in the polygon, or the polygon isn't closed add the point onto the list
             polygon.append([x, y])
@@ -113,6 +113,21 @@ def read_polygons_from_csv(polygons_path, max_polygons=None):
 
     return polygons
 
+
+def raw_vertices_to_df(polygons: list[list]) -> pd.DataFrame:
+    data = {"Polygon": [],
+            "Latitude": [],
+            "Longitude": []}
+
+    for polygon_number, polygon in enumerate(polygons):
+        for latitude, longitude in polygon:
+            data["Polygon"].append(polygon_number)
+            data["Latitude"].append(latitude)
+            data["Longitude"].append(longitude)
+
+    return pd.DataFrame(data, columns=['Polygon', 'Latitude', 'Longitude'])
+
+
 def export_polygons_from_raw_vertices(filename: str,
                                       polygons: list[list]) -> None:
     data = {"Polygon": [],
@@ -127,6 +142,5 @@ def export_polygons_from_raw_vertices(filename: str,
 
     df = pd.DataFrame(data, columns=['Polygon', 'Latitude', 'Longitude'])
     df.to_csv(filename, index=False)
-
 
     return None
