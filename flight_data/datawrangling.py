@@ -25,12 +25,11 @@ def dms_to_decimal(dms):
 apts['Lat'] = apts['ARPLatitude'].apply(dms_to_decimal)
 apts['Long'] = apts['ARPLongitude'].apply(dms_to_decimal)
 
-print(apts['Type'])
 
 apts['floatplanes'] = apts['Type'].apply(lambda r: 1 if r == "SEAPLANE BASE" else 0)
+apts['LakeName'] = apts['FacilityName']
 
+wdf = pd.concat([df[['Lat', 'Long', 'floatplanes', 'LakeName']], apts[['Lat', 'Long', 'floatplanes', "LakeName"]]])
 
-wdf = pd.concat([df[['Lat', 'Long', 'floatplanes']], apts[['Lat', 'Long', 'floatplanes']]])
-
-wdf[['Lat', 'Long', 'floatplanes']].to_csv("cleaned.csv", index=False)
+wdf[['Lat', 'Long', 'floatplanes', "LakeName"]].to_csv("cleaned.csv", index=False)
 

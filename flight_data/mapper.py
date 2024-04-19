@@ -3,8 +3,8 @@ import os
 import folium
 import pandas as pd
 
-from functions.files import preprocess_polygons
-from functions.files import read_polygons_from_csv
+
+
 
 df = pd.read_csv("../sucssesful_polygons_vertices.csv")
 
