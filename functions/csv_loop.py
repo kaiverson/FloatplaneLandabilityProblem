@@ -1,5 +1,6 @@
 import sys
 import os
+import pandas as pd
 from polygons import find_most_common_id_and_remove
 
 # to access the main.py file which is in the parent directory
@@ -19,9 +20,9 @@ def csv_loop():
                       visualize=False, max_polygons=None, print_info=True, export_successful=True)
 
     for i in results_list:
-        vertices_file_name = f"{os.path.splitext(i)[0]}_vertices.csv"
-        find_most_common_id_and_remove(filename=vertices_file_name)
-
+        df = pd.read_csv(i)
+        df = find_most_common_id_and_remove(df)
+        df.to_csv(i, index=False)
 
 if __name__ == "__main__":
     csv_loop()
