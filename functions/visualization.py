@@ -25,7 +25,8 @@ def map_lakes(outline_df: pd.DataFrame, marker_df: pd.DataFrame, map_file_name: 
 
     unique_polygon_numbers = outline_df['Polygon'].unique()
     outlines_fg = folium.FeatureGroup(name=f'Detected Lake Polygons')
-    markers_fg = folium.FeatureGroup(name=f"Known Landable Lakes")
+    correct_markers = folium.FeatureGroup(name=f"Correctly Marked Lakes")
+    incorrect_markers = folium.FeatureGroup(name="Incorrectly Labeled Lakes")
 
     for poly_id in unique_polygon_numbers:
         poly = outline_df[outline_df['Polygon'] == poly_id]
@@ -40,9 +41,13 @@ def map_lakes(outline_df: pd.DataFrame, marker_df: pd.DataFrame, map_file_name: 
             location=[row['Lat'], row['Long']],
             popup=f"Known Landable Lake:  {row['LakeName']}",
             icon=folium.Icon(color='green' if row["detected"] else "red")
-        ).add_to(markers_fg)
+        ).add_to(correct_markers if row['detected'] else incorrect_markers)
 
     outlines_fg.add_to(map)
-    markers_fg.add_to(map)
+    correct_markers.add_to(map)
+    incorrect_markers.add_to(map)
+
+    folium.LayerControl().add_to(map)
+
     map.save(map_file_name)
 

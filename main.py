@@ -113,6 +113,7 @@ if __name__ == "__main__":
     concats those together, visualizes them, and checks to see how many points we got right with our algorithm.
     """
     # TODO:  Refactor some of this code to be inside abstracted functions
+    # TODO:  Create Diagram for Pipe-Filter Architectural Flow of Code
 
 
     csv_list = ['lakes_csv/lake_boundaries_1.csv', 'lakes_csv/lake_boundaries_2.csv', 'lakes_csv/lake_boundaries_3.csv',
