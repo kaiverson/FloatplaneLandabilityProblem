@@ -1,6 +1,6 @@
 import sys
 import os
-import remove_polygon_that_surrounds
+from polygons import find_most_common_id_and_remove
 
 # to access the main.py file which is in the parent directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -20,7 +20,7 @@ def csv_loop():
 
     for i in results_list:
         vertices_file_name = f"{os.path.splitext(i)[0]}_vertices.csv"
-        remove_polygon_that_surrounds.find_most_common_id_and_remove(filename=vertices_file_name)
+        find_most_common_id_and_remove(filename=vertices_file_name)
 
 
 if __name__ == "__main__":
