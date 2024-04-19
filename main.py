@@ -134,24 +134,34 @@ if __name__ == "__main__":
     lake_truth = lake_truth[lake_truth['floatplanes'] == 1]  # we don't care about runways
 
     """
-    now we need to filter out the places that aren't landable bodies of water, I naively do that here by removing 
-    points in the source of truth that are less than or greater than the points detected in our ROI, but there's
-    obviously a better way to do that.
+    we need to filter out places that aren't in our ROI
     """
-    min_lat, max_lat = df['Latitude'].min(), df['Latitude'].max()
-    min_lon, max_lon = df['Longitude'].min(), df['Longitude'].max()
-
-
-    lake_truth = lake_truth[lake_truth['Lat'] > min_lat]
-    lake_truth = lake_truth[lake_truth["Lat"] < max_lat]
-    lake_truth = lake_truth[lake_truth['Long'] > min_lon]
-    lake_truth = lake_truth[lake_truth["Long"] < max_lon]
+    matSuROI = [
+        (-151.6970688287938, 60.90480020426519),
+        (-151.3489595751618, 61.00629812504111),
+        (-151.1459775803294, 61.04351337219632),
+        (-150.9369163348004, 61.19936156775925),
+        (-150.6092949437964, 61.27478397462557),
+        (-150.4866081744711, 61.24217854425234),
+        (-149.9790927356937, 61.23316377103141),
+        (-149.8644558219648, 61.35567989288409),
+        (-149.7988576878899, 61.39628094061301),
+        (-149.6061035585755, 61.49071772290527),
+        (-149.2577295764331, 61.48164025046362),
+        (-148.9007510082246, 63.38768837583029),
+        (-151.0072124599679, 63.06933025031949),
+        (-153.8934978076406, 62.50953235888112),
+        (-151.6970688287938, 60.90480020426519)
+    ]
+    matSuROI = [(lat, lon) for lon, lat in matSuROI]  # reverse this because gee expects it the other way
+    lake_truth['roi'] = lake_truth.apply(lambda r: is_point_in_polygon(matSuROI, (r["Lat"], r['Long'])), axis='columns')
+    lake_truth = lake_truth[lake_truth['roi']]
 
 
 
     # now we need to check each point in the source of truth data and see if it's bounded by one of the polygons
     lake_truth = generate_positive_identification_statistics(df, lake_truth, verbose=True)
-    print(lake_truth)
+    lake_truth.to_csv('detected_lakes.csv', columns=['Lat', "Long", "LakeName", "detected"], index=False)
 
     # now send all this to the map_lakes function to generate an html file
     map_lakes(outline_df=df, marker_df=lake_truth)

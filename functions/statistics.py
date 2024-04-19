@@ -41,7 +41,7 @@ def generate_positive_identification_statistics(outline_df: pd.DataFrame,
 
             if is_point_in_polygon(poly_verts, (lat, lon)):
                 lakes_correctedly_detected += 1
-                row['detected'] = 1
+                marker_df.at[index, 'detected'] = 1  # Set 'detected' flag directly on the original DataFrame
                 break
 
     if verbose:
