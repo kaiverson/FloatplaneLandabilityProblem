@@ -1,4 +1,4 @@
-from functions.polygons import *
+from toolbox.polygons import *
 import os
 
 def test_is_point_in_polygon():
