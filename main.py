@@ -45,7 +45,6 @@ def main_function(target_meters=500.0,
     return:
         the successful polygons in a dataframe
     """
-    # TODO: add more polygon information. Min edge, max edge, etc.
     abs_polygons_path = os.path.abspath(polygons_path)
     if not os.path.exists(abs_polygons_path):
         print(f"CSV file '{polygons_path}' not found.")
