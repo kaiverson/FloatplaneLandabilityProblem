@@ -20,7 +20,6 @@ from toolbox.debugging_tools import stop_watch
 from toolbox.constants import MATSU_REGION_OF_INTEREST as roi
 
 
-
 @stop_watch
 def main_function(target_meters=500.0,
                   polygons_path='polygons_unprocessed.csv',
@@ -46,8 +45,6 @@ def main_function(target_meters=500.0,
     return:
         the successful polygons in a dataframe
     """
-    # TODO: make code more readable.  Halfway done!
-    # TODO: add more polygon information. Min edge, max edge, etc.
     abs_polygons_path = os.path.abspath(polygons_path)
     if not os.path.exists(abs_polygons_path):
         print(f"CSV file '{polygons_path}' not found.")
@@ -64,16 +61,25 @@ def main_function(target_meters=500.0,
         solution = has_length_within_polygon_naive(vertices, target_meters, visualize)
         location = average_vertice_location(vertices)
 
+        # calculate all the data
         edge_lengths = edge_lengths_of_polygon(vertices, lat_lon_to_meters(vertices[0]))
         edge_mean = np.mean(edge_lengths)
         edge_std = np.std(edge_lengths)
         perimeter = np.sum(edge_lengths)
-
+        edge_min_length = np.min(edge_lengths)
+        edge_max_length = np.max(edge_lengths)
         vertices_amount = len(vertices)
+
         polygon_results.append((int(polygon), location[0], location[1], solution, perimeter))
         if print_info and solution == "Passes":
-            print(
-                f"Polygon {polygon:>6.0f}: {solution:<10} Lat,Lon: ({location[0]}, {location[1]}), # vertices: {vertices_amount}, Edge mean: {edge_mean:.3f}, Edge std: {edge_std:.3f}, Perimeter: {perimeter:>10}")
+            printable_info = [
+                f"Polygon {polygon:>6.0f}: {solution:<10} ",
+                f"Lat,Lon: ({location[0]}, {location[1]}), # vertices: {vertices_amount}, Edge mean: {edge_mean:.3f},",
+                f"Edge std: {edge_std:.3f}, Perimeter: {perimeter:>10},",
+                f", Edge Min Length {edge_min_length}, Edge Max Length {edge_max_length}"
+            ]
+            print(" ".join(printable_info))
+
         if solution == 'Fails':
             failed += 1
         else:
@@ -94,11 +100,14 @@ def main_function(target_meters=500.0,
         print(f"{percent_passed:.1f}% of the polygons passed.")
 
     # Write results to CSV file using Pandas
-    df = pd.DataFrame(polygon_results, columns=['Polygon', 'Latitude', 'Longitude', 'Result', 'Perimeter'])
-
     if results_path is not None:
         # if you've turned on results path send that to .csv
-        df.to_csv(results_path, index=False)
+        pd.DataFrame(
+            polygon_results,
+            columns=['Polygon', 'Latitude', 'Longitude', 'Result', 'Perimeter']
+        ).to_csv(
+            results_path,
+            index=False)
 
     if export_successful and results_path:
         # if you've turned on export successful and specified a path, export those
@@ -136,10 +145,10 @@ if __name__ == "__main__":
     I went ahead and refactored everything so that the model produces a list of dataframes of successful polygons, then
     concats those together, visualizes them, and checks to see how many points we got right with our algorithm.
     """
-    # TODO:  Create Diagram for Pipe-Filter Architectural Flow of Code
 
-    csv_list = [os.path.join("lakes_csv", filename) for filename in os.listdir("lakes_csv") if filename.endswith(".csv")]
-    successful_polygons = [main_function(polygons_path=csv_file) for csv_file in csv_list]
+    csv_list = [os.path.join("lakes_csv", filename) for filename in os.listdir("lakes_csv") if
+                filename.endswith(".csv")]
+    successful_polygons = [main_function(polygons_path=csv_file,) for csv_file in csv_list]
 
     # make all the polygon indices unique by adding the length of the previous df to the polygon
     index_counter = 1
@@ -159,4 +168,3 @@ if __name__ == "__main__":
 
     # now send all this to the map_lakes function to generate an html file
     map_lakes(outline_df=df, marker_df=lake_truth)
-
