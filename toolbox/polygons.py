@@ -69,17 +69,16 @@ def average_vertice_location(vertices):
     return avg_latitude, avg_longitude
 
 
-def check_diagonal(vertices, i, j, target_meters, lat_lon_to_meters, visualize=False):
+def check_diagonal_length(vertices, i, j, target_meters, lat_lon_to_meters):
     """
     Determines if a diagonal is longer than the target distance.
 
     Parameters:
         vertices (numpy.ndarray): Array of ordered pairs representing the vertices fo the polygon.
-        i (int): index of the first vertice defining the diagonal.
-        j (int): index of the second vertice defining the diagonal.
+        i (int): index of the first endpoint of the diagonal.
+        j (int): index of the second endpoint of the diagonal.
         target_meters (float): the target distance in meters.
         lat_lon_to_meters ([float, float]): Conversion rate from lat to meters and from lon to meters.
-        visualize (bool): determines if the algorithm should be visualized.
 
     Returns:
         bool: True if diagonal passes, False if diagonal doesn't pass.
@@ -87,10 +86,23 @@ def check_diagonal(vertices, i, j, target_meters, lat_lon_to_meters, visualize=F
     distance = distance_between_vertices(vertices, i, j, lat_lon_to_meters)
     passes = True if distance >= target_meters else False
 
-    if visualize: 
-        print(f" {1 if passes else 0}", end='')
-
     return passes
+
+
+def check_diagonal_path(vertices, i, j):
+    """
+    Determines if a diagonal has a clear path. Basically a concave detector.
+    Warning: this will significantly slow down the code. Consider reducing the amount of vertices in a polygon if it is excessive (> 1000).
+
+    Parameters:
+        vertices (numpy.ndarray): Array of ordered pairs representing the vertices fo the polygon.
+        i (int): Index of the first endpoint of the diagonal.
+        j (int): Index of the second endpoint of the diagonal.
+
+    Returns:
+        bool: True if diagonal passes, False if diagonal doesn't pass.
+    """
+    return NotImplementedError()
 
 
 def is_point_in_polygon(vertices: [tuple], point_coordinates: tuple) -> bool:
@@ -138,8 +150,6 @@ def is_point_in_polygon(vertices: [tuple], point_coordinates: tuple) -> bool:
     return inside
 
 
-
-
 def has_length_within_polygon_naive(vertices, target_meters, visualize=False):
     """
     Determines which polygons have a straight line distance of at least target_meters contained within them.
@@ -174,22 +184,27 @@ def has_length_within_polygon_naive(vertices, target_meters, visualize=False):
 
     for i in range(num_vertices):
         for j in range(num_vertices):
+
+            # Question 1: Do we even consider the diagonal?
             if i >= j - min_index_offset:
-                if visualize:
-                    print(" ~", end='')
                 continue
 
-            passes = check_diagonal(vertices, i, j, target_meters, conversion, visualize)
-            solution = "Passes" if passes is True else solution
+            # Question 2: Is the diagonal's length great enough for a float plane to land?
+            is_greater_than_target = check_diagonal_length(vertices, i, j, target_meters, conversion)
+            if not is_greater_than_target:
+                continue
+
+            # NOT IMPLIMENTED. 
+            # Question 3: Does the diagonal have a clear path (Doesn't intersect the polygon anywhere)?
+            # is_path_clear = check_diagonal_path(vertices, i, j)
+            # if not is_path_clear:
+            #    continue
             
-            if passes and not visualize:
-                return solution
-        if visualize:
-            print()
+            # Congratulations, this lake is float plane landable.
+            return "Passes"
 
-    
-
-    return solution
+    # Unfortunately this lake is not float plane landable.
+    return "Fails"
 
 
 def raw_vertices_to_df(polygons: list[list]) -> pd.DataFrame:

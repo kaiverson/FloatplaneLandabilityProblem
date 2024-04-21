@@ -1,5 +1,5 @@
 #####################################################################
-# Created by Pat Group Project Team One (Just Kai Iverson for now)
+# Created by Pat Group Project (Kai, Youji, Daniah, Pat)
 # Implements a naive solution to the float plane landability problem.
 # File created on 4-1-2024
 #####################################################################
@@ -148,7 +148,7 @@ if __name__ == "__main__":
 
     csv_list = [os.path.join("lakes_csv", filename) for filename in os.listdir("lakes_csv") if
                 filename.endswith(".csv")]
-    successful_polygons = [main_function(polygons_path=csv_file,) for csv_file in csv_list]
+    successful_polygons = [main_function(polygons_path=csv_file) for csv_file in csv_list]
 
     # make all the polygon indices unique by adding the length of the previous df to the polygon
     index_counter = 1
