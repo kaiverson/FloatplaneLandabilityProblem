@@ -28,6 +28,16 @@ def map_lakes(outline_df: pd.DataFrame, marker_df: pd.DataFrame, map_file_name: 
     correct_markers = folium.FeatureGroup(name=f"Correctly Marked Lakes")
     incorrect_markers = folium.FeatureGroup(name="Incorrectly Labeled Lakes")
 
+    # Add a satellite layer
+    satellite = folium.TileLayer(
+        tiles='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attr='Esri',
+        name='Satellite Image',
+        overlay=True
+    )
+
+    satellite.add_to(map)
+
     for poly_id in unique_polygon_numbers:
         poly = outline_df[outline_df['Polygon'] == poly_id]
 
@@ -42,6 +52,8 @@ def map_lakes(outline_df: pd.DataFrame, marker_df: pd.DataFrame, map_file_name: 
             popup=f"Known Landable Lake:  {row['LakeName']}",
             icon=folium.Icon(color='green' if row["detected"] else "red")
         ).add_to(correct_markers if row['detected'] else incorrect_markers)
+
+
 
     outlines_fg.add_to(map)
     correct_markers.add_to(map)

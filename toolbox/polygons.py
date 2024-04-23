@@ -108,9 +108,6 @@ def is_point_in_polygon(vertices: [tuple], point_coordinates: tuple) -> bool:
     Returns: true or false depending on whether the polygon contains the point
 
     """
-
-    # TODO: consider if adding epsilons is necessary for our purposes
-
     # unpack the point coordinate tuple
     x, y = point_coordinates
 
