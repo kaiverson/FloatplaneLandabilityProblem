@@ -1,6 +1,6 @@
 """
 This script contains some constants that we need to make the code run, we can adjust the region of interest in
-here if we so desire
+here if we so desire -pat
 
 """
 

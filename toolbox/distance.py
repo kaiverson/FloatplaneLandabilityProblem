@@ -1,3 +1,8 @@
+"""
+This code contains the functions that calculate various distance metrics.  Written by kai
+
+"""
+
 import numpy as np
 
 

@@ -1,3 +1,7 @@
+"""
+Code to do some work on the polygons and return some statistics.
+Written by Kai mostly and Pat
+"""
 import pandas as pd
 from toolbox.distance import *
 

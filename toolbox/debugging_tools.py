@@ -1,3 +1,7 @@
+"""
+this is debugging code created by kai to decorate code and get an idea of how fast the code was running
+"""
+
 from time import time
 
 def stop_watch(func):

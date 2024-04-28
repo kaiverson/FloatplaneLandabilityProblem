@@ -1,3 +1,7 @@
+"""
+unit test to test some work pat did
+-pat
+"""
 from toolbox.polygons import *
 import os
 
@@ -7,9 +11,6 @@ def test_is_point_in_polygon():
     Returns:
 
     """
-
-    # TODO:  add more complex (and ideally convex) polygon
-
     verbose = os.getenv("VERBOSE") == '1'
 
     vertices = [

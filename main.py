@@ -2,6 +2,7 @@
 # Created by Pat Group Project Team One (Just Kai Iverson for now)
 # Implements a naive solution to the float plane landability problem.
 # File created on 4-1-2024
+# Worked on by everyone, pipe and filter architecture
 #####################################################################
 
 

@@ -1,3 +1,8 @@
+"""
+Code to take and generate a histogram and also explain what is happening.
+-pat
+"""
+
 import pandas as pd
 import matplotlib
 matplotlib.use("Agg")

@@ -1,5 +1,8 @@
-import os
+"""
+Initial code to generate a map of the code, part of experimental code to generate folium maps
+by pat
 
+"""
 import folium
 import pandas as pd
 
@@ -28,4 +31,4 @@ for poly_id in unique_polygon_numbers:
 
 
 folium.LayerControl().add_to(map)
-map.save("map.html")
+map.save("lake_map.html")

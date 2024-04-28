@@ -1,3 +1,7 @@
+"""
+contains a helper function to generate some statistics, written by kai
+"""
+
 import pandas as pd
 from toolbox.polygons import is_point_in_polygon
 from toolbox.debugging_tools import stop_watch

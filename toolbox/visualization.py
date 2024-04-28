@@ -7,7 +7,7 @@ import folium
 
 
 
-def map_lakes(outline_df: pd.DataFrame, marker_df: pd.DataFrame, map_file_name: str = "map.html") -> None:
+def map_lakes(outline_df: pd.DataFrame, marker_df: pd.DataFrame, map_file_name: str = "lake_map.html") -> None:
     """
     takes in a dataframe with the polygons as well as a source of marker dataframe and saves a
     single file

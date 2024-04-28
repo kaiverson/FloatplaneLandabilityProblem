@@ -1,3 +1,9 @@
+"""
+by pat
+
+this code was convenience code to convert from degrees to radians
+"""
+
 import numpy as np
 from sklearn.metrics.pairwise import haversine_distances as hd
 from math import radians

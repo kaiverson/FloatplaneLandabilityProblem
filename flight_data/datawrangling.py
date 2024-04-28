@@ -1,3 +1,7 @@
+"""
+data cleaning and wrangling code to clean the test data
+"""
+
 import pandas as pd
 
 df = pd.read_csv('lakes.csv')

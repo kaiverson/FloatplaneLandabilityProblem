@@ -1,3 +1,8 @@
+"""
+Helper functions in here to do various operations on polygons and preprocess them
+Pat and Kai developed this
+"""
+
 import numpy as np
 import pandas as pd
 import re
